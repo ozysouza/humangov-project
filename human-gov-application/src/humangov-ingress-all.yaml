@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: humangov-python-app-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: frontend
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:811825455902:certificate/b9fc42e1-cfc4-487b-9d33-8accc597e1e6
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+  labels:
+    app: humangov-python-app-ingress
+spec:
+  ingressClassName: alb
+  rules:
+    - host: california.humangovozd.click
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: humangov-nginx-service-california
+              port:
+                number: 80
+                
+    - host: florida.humangovozd.click
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: humangov-nginx-service-florida
+              port:
+                number: 80
+    - host: staging.humangovozd.click
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: humangov-nginx-service-staging
+              port:
+                number: 80

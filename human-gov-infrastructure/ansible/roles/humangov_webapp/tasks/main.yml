@@ -1,0 +1,103 @@
+---
+- name: Update and upgrade apt packages
+  apt:
+    upgrade: dist
+    update_cache: yes
+  Become: yes
+
+- name: Install required packages
+  apt:
+    name:
+      - nginx
+      - python3-pip
+      - python3-dev
+      - build-essential
+      - libssl-dev
+      - libffi-dev
+      - python3-setuptools
+      - python3-venv
+      - unzip
+    state: present
+  Become: yes
+
+- name: Ensure UFW allows Nginx HTTP traffic
+  ufw:
+    rule: allow
+    name: 'Nginx HTTP'
+  Become: yes
+
+- name: Create project directory
+  file:
+    path: "{{ project_path }}"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: '0755'
+  Become: yes
+
+- name: Create Python virtual environment
+  command:
+    cmd: python3 -m venv {{ project_path }}/humangovenv
+    creates: "{{ project_path }}/humangovenv"
+
+- name: Copy the application zip file to the destination
+  copy:
+    src: "{{ source_application_path }}/humangov-app.zip"
+    dest: "{{ project_path }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: '0644'
+  Become: yes
+  
+- name: Unzip the application zip file
+  unarchive:
+    src: "{{ project_path }}/humangov-app.zip"
+    dest: "{{ project_path }}"
+    remote_src: yes
+  notify: Restart humangov
+  Become: yes
+
+- name: Install Python packages from requirements.txt into the virtual environment
+  pip:
+    requirements: "{{ project_path }}/requirements.txt"
+    virtualenv: "{{ project_path }}/humangovenv"
+
+- name: Create systemd service file for Gunicorn
+  template:
+    src: humangov.service.j2
+    dest: /etc/systemd/system/{{ project_name }}.service
+  notify: Restart humangov
+  Become: yes
+
+- name: Enable and start Gunicorn service
+  systemd:
+    name: "{{ project_name }}"
+    enabled: yes
+    state: started
+  Become: yes
+
+- name: Remove the default nginx configuration file
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  Become: yes
+
+- name: Change permissions of the user's home directory
+  file:
+    path: "/home/{{ username }}"
+    mode: '0755'
+  Become: yes
+
+- name: Configure Nginx to proxy requests
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/{{ project_name }}
+  Become: yes
+
+- name: Enable Nginx configuration
+  file:
+    src: /etc/nginx/sites-available/{{ project_name }}
+    dest: /etc/nginx/sites-enabled/{{ project_name }}
+    state: link
+  notify: Restart Nginx
+  Become: yes

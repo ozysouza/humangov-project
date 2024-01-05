@@ -1,0 +1,17 @@
+[Unit]
+Description=Gunicorn instance to serve {{ project_name }}
+After=network.target
+
+[Service]
+User={{ username }}
+Group=www-data
+WorkingDirectory={{ project_path }}
+Environment="US_STATE={{ us_state }}"
+Environment="PATH={{ project_path }}/humangovenv/bin"
+Environment="AWS_REGION={{ aws_region }}"
+Environment="AWS_DYNAMODB_TABLE={{ aws_dynamodb_table }}"
+Environment="AWS_BUCKET={{ aws_s3_bucket }}"
+ExecStart={{ project_path }}/humangovenv/bin/gunicorn --workers 1 --bind unix:{{ project_path }}/{{ project_name }}.sock -m 007 {{ project_name }}:app
+
+[Install]
+WantedBy=multi-user.target

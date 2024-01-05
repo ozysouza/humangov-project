@@ -1,0 +1,13 @@
+{% extends 'layouts/master.html' %}
+{% block title %}New employee{% endblock %}
+{% block body %}
+<h1>New Employee</h1>
+<form action="{{ url_for('new_record') }}" method="post" enctype="multipart/form-data">
+	{{ generate_fields(form) }}
+	<input type="submit" class="btn btn-success" value="Add">
+</form>
+<br>
+{% endblock %}
+<footer class="container">
+	<p>&copy; The Cloud Bootcamp. All rights reserved (Created for educational purporses only - prohibited reproduction)</p>
+</footer>

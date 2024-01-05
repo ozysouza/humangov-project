@@ -1,0 +1,12 @@
+---
+- name: Restart Nginx
+  systemd:
+    name: nginx
+    state: restarted
+  Become: yes
+
+- name: Restart humangov
+  systemd:
+    name: humangov
+    state: restarted
+  Become: yes

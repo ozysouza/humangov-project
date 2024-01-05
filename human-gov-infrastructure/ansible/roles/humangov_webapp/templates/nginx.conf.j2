@@ -1,0 +1,9 @@
+server {
+    listen 80;
+    server_name humangov www.humangov;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:{{ project_path }}/{{ project_name }}.sock;
+    }
+}
